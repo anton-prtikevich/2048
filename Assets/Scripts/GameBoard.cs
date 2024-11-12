@@ -29,6 +29,50 @@ public class GameBoard : MonoBehaviour
         SpawnNewTile();
     }
 
+    public int[,] GetBoardState()
+    {
+        int[,] state = new int[boardSize, boardSize];
+        for (int x = 0; x < boardSize; x++)
+        {
+            for (int y = 0; y < boardSize; y++)
+            {
+                state[x, y] = tiles[x, y]?.Value ?? 0;
+            }
+        }
+        return state;
+    }
+
+    public void LoadBoardState(int[,] state)
+    {
+        // Очищаем текущую доску
+        foreach (var tile in allTiles)
+        {
+            if (tile != null)
+            {
+                Destroy(tile.gameObject);
+            }
+        }
+        allTiles.Clear();
+        tiles = new Tile[boardSize, boardSize];
+
+        // Восстанавливаем состояние
+        for (int x = 0; x < boardSize; x++)
+        {
+            for (int y = 0; y < boardSize; y++)
+            {
+                if (state[x, y] > 0)
+                {
+                    CreateTile(x, y, state[x, y]);
+                }
+            }
+        }
+        foreach (var item in state)
+        {
+            Debug.Log(item);
+        }
+        Debug.Log("Board state loaded");
+    }
+
     private void InitializeBoard()
     {
         for (int x = 0; x < boardSize; x++)
