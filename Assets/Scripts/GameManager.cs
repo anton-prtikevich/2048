@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Settings")]
     [SerializeField] private GameBoard gameBoard;
-    [SerializeField] private int movesBeforeAd = 300;
+    [SerializeField] private int movesBeforeAd = 500;
     [SerializeField] private float scoreAnimationDuration = 0.5f;
 
     private int currentScore;
@@ -129,6 +129,7 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI(true, oldScore);
         
         movesSinceLastAd++;
+        Debug.Log(movesSinceLastAd);
         if (movesSinceLastAd >= movesBeforeAd)
         {
             ShowInterstitialAd();
