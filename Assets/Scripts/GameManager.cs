@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine.UI;
 using System;
 using DG.Tweening;
+using YG;
 #if UNITY_ANDROID
 using UnityEngine.Android;
 #endif
@@ -32,8 +33,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Game Settings")]
     [SerializeField] private GameBoard gameBoard;
-    [SerializeField] private YandexGamesInitializer yandexGames;
-    [SerializeField] private int movesBeforeAd = 30;
+    [SerializeField] private int movesBeforeAd = 300;
     [SerializeField] private float scoreAnimationDuration = 0.5f;
 
     private int currentScore;
@@ -73,12 +73,9 @@ public class GameManager : MonoBehaviour
         LoadProgress();
     }
 
+
     private void Start()
     {
-        if (continueWithAdButton != null)
-        {
-            continueWithAdButton.onClick.AddListener(ShowRewardedAd);
-        }
 
         if (continueGameButton != null)
         {
@@ -221,24 +218,9 @@ public class GameManager : MonoBehaviour
 
     private void ShowInterstitialAd()
     {
-        #if !UNITY_EDITOR
-        if (yandexGames != null)
-        {
-            yandexGames.ShowInterstitial();
-        }
-        #endif
+        YandexGame.FullscreenShow();
     }
 
-    private void ShowRewardedAd()
-    {
-        #if !UNITY_EDITOR
-        if (yandexGames != null)
-        {
-            isWaitingForRewardedAd = true;
-            yandexGames.ShowRewarded("continue");
-        }
-        #endif
-    }
 
     public void GiveReward()
     {
@@ -287,20 +269,16 @@ public class GameManager : MonoBehaviour
         };
 
         string json = JsonUtility.ToJson(saveData);
-        PlayerPrefs.SetString(SaveDataKey, json);
-        PlayerPrefs.Save();
+        YandexGame.savesData.savegame = json;
 
-        #if !UNITY_EDITOR
-        if (yandexGames != null)
-        {
-            yandexGames.SaveProgress(json);
-        }
-        #endif
+        YandexGame.SaveLocal();
     }
+
+    public void Load() => YandexGame.LoadLocal();
 
     public void LoadProgress()
     {
-        string savedData = PlayerPrefs.GetString(SaveDataKey, "");
+        string savedData = YandexGame.savesData.savegame;
         if (!string.IsNullOrEmpty(savedData))
         {
             GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(savedData);
@@ -347,6 +325,8 @@ public class GameManager : MonoBehaviour
         {
             scoreAnimationSequence.Kill();
         }
+
+        continueGameButton.onClick.RemoveListener(ContinueGame);
     }
 
     public void ExitGame()
@@ -384,16 +364,16 @@ public class GameManager : MonoBehaviour
     private float _averageFPS;
     private void Update()
     {
-        _timeleft -= Time.deltaTime;
+        // _timeleft -= Time.deltaTime;
 
-        if (_timeleft <= 0.0)
-        {
-            _currentFPS = 1.0f / Time.smoothDeltaTime;
-            _averageFPS = Time.frameCount / Time.time;
-            _timeleft = _updateInterval;
+        // if (_timeleft <= 0.0)
+        // {
+        //     _currentFPS = 1.0f / Time.smoothDeltaTime;
+        //     _averageFPS = Time.frameCount / Time.time;
+        //     _timeleft = _updateInterval;
 
-            _fpsText.text = $"FPS: {_currentFPS:0.}";
-            _averageFPSText.text = $"Средний FPS: {_averageFPS:0.}";
-        }
+        //     _fpsText.text = $"FPS: {_currentFPS:0.}";
+        //     _averageFPSText.text = $"Средний FPS: {_averageFPS:0.}";
+        // }
     }
 }

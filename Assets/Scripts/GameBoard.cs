@@ -178,19 +178,19 @@ public class GameBoard : MonoBehaviour
     {
         if (isAnimating) return;
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow) || SwipeDetector.SwipeDirection == SwipeDirection.Left)
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A) || SwipeDetector.SwipeDirection == SwipeDirection.Left)
         {
             MoveTiles(Vector2Int.left);
         }
-        else if (Input.GetKeyDown(KeyCode.RightArrow) || SwipeDetector.SwipeDirection == SwipeDirection.Right)
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D) || SwipeDetector.SwipeDirection == SwipeDirection.Right)
         {
             MoveTiles(Vector2Int.right);
         }
-        else if (Input.GetKeyDown(KeyCode.UpArrow) || SwipeDetector.SwipeDirection == SwipeDirection.Up)
+        else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || SwipeDetector.SwipeDirection == SwipeDirection.Up)
         {
             MoveTiles(Vector2Int.up);
         }
-        else if (Input.GetKeyDown(KeyCode.DownArrow) || SwipeDetector.SwipeDirection == SwipeDirection.Down)
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S) || SwipeDetector.SwipeDirection == SwipeDirection.Down)
         {
             MoveTiles(Vector2Int.down);
         }
@@ -257,6 +257,13 @@ public class GameBoard : MonoBehaviour
                         // Обновляем значение целевого тайла
                         tiles[nextPos.x, nextPos.y].SetValue(currentTile.Value * 2);
                         GameManager.Instance.AddScore(currentTile.Value * 2);
+                        
+                        // Воспроизводим звук слияния
+                        if (SoundManager.Instance != null)
+                        {
+                            SoundManager.Instance.PlayMergeSound();
+                        }
+                        
                         goto NextTile;
                     }
                     else break;
@@ -279,6 +286,12 @@ public class GameBoard : MonoBehaviour
         // Анимируем все движения
         if (movements.Count > 0)
         {
+            // Воспроизводим звук движения, если были перемещения
+            if (hasMoved && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMoveSound();
+            }
+
             foreach (var move in movements)
             {
                 move.tile.GetComponent<RectTransform>()

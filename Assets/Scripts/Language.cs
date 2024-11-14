@@ -3,43 +3,73 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using TMPro;
 using UnityEngine;
+using YG;
 
 public class Language : MonoBehaviour
 {
-    #if !UNITY_EDITOR && UNITY_WEBGL
-    [DllImport("__Internal")]
-    private static extern string GetLang();
-    #endif
-    public string CurrentLanguage = "en";
-    public string[] Languages;
+    [SerializeField] private TMP_Dropdown dropdownItem;
+    [SerializeField] private YandexGame yandexGame;
+    [SerializeField] private string CurrentLanguage = "en";
+    [SerializeField] private string[] Languages = new string[]
+    {
+        "ru",
+        "en",
+        "tr",
+        "az",
+        "be",
+        "he",
+        "hy",
+        "ka",
+        "et",
+        "fr",
+        "kk",
+        "ky",
+        "lt",
+        "lv",
+        "ro",
+        "tg",
+        "tk",
+        "uk",
+        "uz",
+        "es",
+        "pt",
+        "ar",
+        "id",
+        "ja",
+        "it",
+        "de",
+        "hi",
+    };
 
-    public TextMeshProUGUI langText;
     
-    [SerializeField] private InternationText[] internationTexts;
-
-    [ContextMenu("FindInternationTexts")]
-    private void FindInternationTexts()
-    {
-        internationTexts = FindObjectsOfType<InternationText>(true);
-    }
-
-    public void SetLanguage(int indexLang)
-    {
-        CurrentLanguage = Languages[indexLang];
-
-        langText.text = CurrentLanguage;
-        
-        foreach (var internationText in internationTexts)
-        {
-            internationText.SetLocalize(indexLang);
-        }
-    }
-
     private void Awake()
     {
         #if UNITY_WEBGL
-        CurrentLanguage = GetLang();
-        langText.text = CurrentLanguage;
+        SetLanguageStr(YandexGame.savesData.language);
         #endif
+    }
+
+    private void OnEnable() => YandexGame.SwitchLangEvent += SetLanguageStr;
+
+    private void OnDisable() => YandexGame.SwitchLangEvent -= SetLanguageStr;
+
+    public void SetLanguage(int index)
+    {
+        CurrentLanguage = Languages[index];
+        yandexGame.SetLanguage(CurrentLanguage);
+    }
+
+    private void SetLanguageStr(string lang)
+    {
+        CurrentLanguage = lang;
+        yandexGame.SetLanguage(CurrentLanguage);
+    }
+    
+    [ContextMenu("InitDropdownItem")]
+    public void InitDropdownItem()
+    {
+        dropdownItem.ClearOptions();
+        dropdownItem.AddOptions(new List<string>(Languages));
+        dropdownItem.value = System.Array.IndexOf(Languages, CurrentLanguage);    
     }
 }
