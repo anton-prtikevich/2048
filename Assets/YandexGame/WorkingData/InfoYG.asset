@@ -197,7 +197,7 @@ MonoBehaviour:
     be: 1
     he: 1
     hy: 1
-    ka: 1
+    ka: 0
     et: 1
     fr: 1
     kk: 1
@@ -211,12 +211,12 @@ MonoBehaviour:
     uz: 1
     es: 1
     pt: 1
-    ar: 1
+    ar: 0
     id: 1
-    ja: 1
+    ja: 0
     it: 1
     de: 1
-    hi: 1
+    hi: 0
   fonts:
     defaultFont: []
     ru: []
@@ -274,7 +274,8 @@ MonoBehaviour:
     ja: []
     it: []
     de: []
-    hi: []
+    hi:
+    - {fileID: 0}
   fontsSizeCorrect:
     ru: 
     en: 

@@ -1,7 +1,7 @@
 {
-  "idSave": 31,
+  "idSave": 40,
   "isFirstSession": false,
-  "language": "ru",
+  "language": "tr",
   "promptDone": false,
   "money": 1,
   "newPlayerName": "Hello!",
@@ -9,5 +9,6 @@
     false,
     true,
     false
-  ]
+  ],
+  "savegame": null
 }

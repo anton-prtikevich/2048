@@ -42,27 +42,21 @@ public class Language : MonoBehaviour
     };
 
     
-    private void Awake()
-    {
-        #if UNITY_WEBGL
-        SetLanguageStr(YandexGame.savesData.language);
-        #endif
-    }
+    private void OnEnable() => YandexGame.SwitchLangEvent += SeDropdownLang;
 
-    private void OnEnable() => YandexGame.SwitchLangEvent += SetLanguageStr;
-
-    private void OnDisable() => YandexGame.SwitchLangEvent -= SetLanguageStr;
+    private void OnDisable() => YandexGame.SwitchLangEvent -= SeDropdownLang;
 
     public void SetLanguage(int index)
     {
         CurrentLanguage = Languages[index];
+
         yandexGame.SetLanguage(CurrentLanguage);
     }
 
-    private void SetLanguageStr(string lang)
+    private void SeDropdownLang(string lang)
     {
         CurrentLanguage = lang;
-        yandexGame.SetLanguage(CurrentLanguage);
+        dropdownItem.value = System.Array.IndexOf(Languages, CurrentLanguage);    
     }
     
     [ContextMenu("InitDropdownItem")]
