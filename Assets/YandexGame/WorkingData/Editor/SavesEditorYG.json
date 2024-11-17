@@ -1,7 +1,7 @@
 {
-  "idSave": 40,
+  "idSave": 931,
   "isFirstSession": false,
-  "language": "tr",
+  "language": "lt",
   "promptDone": false,
   "money": 1,
   "newPlayerName": "Hello!",
@@ -10,5 +10,5 @@
     true,
     false
   ],
-  "savegame": null
+  "savegame": "{\"bestScore\":1200,\"currentScore\":424,\"boardState\":[0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0],\"boardSize\":4,\"hasActiveGame\":true}"
 }

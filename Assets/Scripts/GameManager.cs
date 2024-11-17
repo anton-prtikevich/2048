@@ -129,7 +129,6 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI(true, oldScore);
         
         movesSinceLastAd++;
-        Debug.Log(movesSinceLastAd);
         if (movesSinceLastAd >= movesBeforeAd)
         {
             ShowInterstitialAd();
@@ -179,6 +178,8 @@ public class GameManager : MonoBehaviour
         gameOverPanel.SetActive(true);
         gameOverPanel.transform.localScale = Vector3.zero;
         gameOverPanel.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+
+        ShowInterstitialAd();
         
         SaveProgress();
     }
@@ -205,7 +206,7 @@ public class GameManager : MonoBehaviour
         StartPanel.SetActive(true);
         StartPanel.transform.localScale = Vector3.zero;
         StartPanel.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack).SetUpdate(true);
-        SaveProgress();
+        
     }
 
     public void ResumeGame()
