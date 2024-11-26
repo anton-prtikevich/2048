@@ -21,13 +21,16 @@ public class GameSaveData
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    public bool UseStartPanel = true;
+
+    [Header("platformSDKManager")]
+    [SerializeField] private PlatformSDKManager platformSDKManager;
 
     [Header("UI Elements")]
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI bestScoreText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject StartPanel;
-    [SerializeField] private Button continueWithAdButton;
     [SerializeField] private Button continueGameButton;
     [SerializeField] private Button exitButton;
 
@@ -35,6 +38,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameBoard gameBoard;
     [SerializeField] private int movesBeforeAd = 500;
     [SerializeField] private float scoreAnimationDuration = 0.5f;
+    
 
     private int currentScore;
     private int bestScore;
@@ -68,6 +72,7 @@ public class GameManager : MonoBehaviour
             #endif
         }
         
+        platformSDKManager.InitializeSDK();
         LoadBestScore();
         InitializeUI();
         LoadProgress();
@@ -76,7 +81,6 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-
         if (continueGameButton != null)
         {
             continueGameButton.onClick.AddListener(ContinueGame);
@@ -85,7 +89,7 @@ public class GameManager : MonoBehaviour
         
         UpdateScoreUI(false);
         gameOverPanel.SetActive(false);
-        StartPanel.SetActive(true);
+        if (UseStartPanel) StartPanel.SetActive(true);
         Time.timeScale = 0f;
         movesSinceLastAd = 0;
     }
@@ -123,7 +127,6 @@ public class GameManager : MonoBehaviour
         if (currentScore > bestScore)
         {
             bestScore = currentScore;
-            SaveBestScore();
         }
         
         UpdateScoreUI(true, oldScore);
@@ -206,7 +209,6 @@ public class GameManager : MonoBehaviour
         StartPanel.SetActive(true);
         StartPanel.transform.localScale = Vector3.zero;
         StartPanel.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack).SetUpdate(true);
-        
     }
 
     public void ResumeGame()
@@ -220,9 +222,8 @@ public class GameManager : MonoBehaviour
 
     private void ShowInterstitialAd()
     {
-        YandexGame.FullscreenShow();
+        platformSDKManager.FullscreenShow();
     }
-
 
     public void GiveReward()
     {
@@ -237,13 +238,6 @@ public class GameManager : MonoBehaviour
     private void LoadBestScore()
     {
         bestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
-    }
-
-    private void SaveBestScore()
-    {
-        PlayerPrefs.SetInt(BestScoreKey, bestScore);
-        PlayerPrefs.Save();
-        SaveProgress();
     }
 
     public void SaveProgress()
@@ -271,16 +265,18 @@ public class GameManager : MonoBehaviour
         };
 
         string json = JsonUtility.ToJson(saveData);
-        YandexGame.savesData.savegame = json;
-
-        YandexGame.SaveLocal();
+        platformSDKManager.SaveProgress(SaveDataKey, json);
     }
 
     public void Load() => YandexGame.LoadLocal();
 
     public void LoadProgress()
     {
-        string savedData = YandexGame.savesData.savegame;
+        platformSDKManager.LoadProgress(SaveDataKey, OnProgressLoaded);
+    }
+
+    private void OnProgressLoaded(string savedData)
+    {
         if (!string.IsNullOrEmpty(savedData))
         {
             GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(savedData);
@@ -312,7 +308,7 @@ public class GameManager : MonoBehaviour
     {
         if (pauseStatus)
         {
-            SaveProgress();
+            // SaveProgress();
         }
     }
 
@@ -328,7 +324,10 @@ public class GameManager : MonoBehaviour
             scoreAnimationSequence.Kill();
         }
 
-        continueGameButton.onClick.RemoveListener(ContinueGame);
+        if (continueGameButton != null)
+        {
+            continueGameButton.onClick.RemoveListener(ContinueGame);
+        }
     }
 
     public void ExitGame()

@@ -11,6 +11,7 @@ public class Language : MonoBehaviour
     [SerializeField] private YandexGame yandexGame;
     [SerializeField] private string CurrentLanguage = "en";
     [SerializeField] private string[] Languages;
+    [SerializeField] private TextMeshProUGUI debugtext;
     
 
     [ContextMenu("Init")]
@@ -84,13 +85,16 @@ public class Language : MonoBehaviour
         yandexGame._SwitchLanguage(CurrentLanguage);
 
         dropdownItem.value = System.Array.IndexOf(Languages, CurrentLanguage);    
+        debugtext.text += $"Вызван метод SetLanguage() с аргументом{index}\n";
     }
 
     private void OnSetLanguage(string lang)
     {
-        if (ferstStart) return;
+        if (!ferstStart) return;
 
-        Debug.Log("OnSetLanguage: " + lang);
+        ferstStart = false;
+
+        debugtext.text += $"Вызван метод OnSetLanguage() делегатом {lang}\n";
      
         SetLanguage(System.Array.IndexOf(Languages, lang));
     }
@@ -101,5 +105,25 @@ public class Language : MonoBehaviour
         dropdownItem.ClearOptions();
         dropdownItem.AddOptions(new List<string>(Languages));
         dropdownItem.value = System.Array.IndexOf(Languages, CurrentLanguage);    
+    }
+
+    private void Update() 
+    {
+        if(Input.GetKey(KeyCode.RightAlt) && Input.GetKeyDown(KeyCode.F1))
+        {
+            //переключение дебаг текста
+            debugtext.gameObject.SetActive(!debugtext.gameObject.activeSelf);
+        }
+
+        if(Input.GetKey(KeyCode.RightAlt) && Input.GetKeyDown(KeyCode.F2))
+        {
+            debugtext.text += YandexGame.lang + "\n";
+        }
+
+        if(Input.GetKey(KeyCode.RightAlt) && Input.GetKeyDown(KeyCode.F3))
+        {
+            yandexGame._LanguageRequest();
+        }
+        
     }
 }
