@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 public class ConsoleToText : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI outputText;
     private Queue<string> messages = new Queue<string>();
     private int maxMessages = 15;
 
@@ -25,7 +24,5 @@ public class ConsoleToText : MonoBehaviour
             messages.Dequeue();
         }
         messages.Enqueue(logString);
-        
-        outputText.text = string.Join("\n", messages);
     }
 }

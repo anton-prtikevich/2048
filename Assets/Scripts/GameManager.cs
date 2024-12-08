@@ -20,11 +20,24 @@ public class GameSaveData
 
 public class GameManager : MonoBehaviour
 {
+    //показывать рекламу внутри игрового процесса
+    public bool ShowAdsInsideTheHameplay = false;
+    //показывать рекламу по нажатию на кнопку продолжить игру и при новой игре
+    public bool ShowAdsForButton= false;
     public static GameManager Instance { get; private set; }
-    public bool UseStartPanel = true;
 
-    [Header("platformSDKManager")]
-    [SerializeField] private PlatformSDKManager platformSDKManager;
+    [Header("Platform SDK")]
+    [SerializeField] private PlatformType currentSDKType;
+
+    public enum PlatformType
+    {
+        VK,
+        Yandex
+    }
+    // [SerializeField] private PlatformSDKManager platformSDKManager;
+    [SerializeField] private VKPlatformSDK vkPlatformSDK;
+    [SerializeField] private YandexPlatformSDK yandexPlatformSDK;
+    private IPlatformSDK currentPltform;
 
     [Header("UI Elements")]
     [SerializeField] private TextMeshProUGUI scoreText;
@@ -72,7 +85,17 @@ public class GameManager : MonoBehaviour
             #endif
         }
         
-        platformSDKManager.InitializeSDK();
+       if (currentSDKType == PlatformType.VK)
+        {
+            currentPltform = vkPlatformSDK;
+        }
+        else
+        {
+            currentPltform = yandexPlatformSDK;
+        }
+
+        currentPltform.Initialize();
+        
         LoadBestScore();
         InitializeUI();
         LoadProgress();
@@ -89,7 +112,7 @@ public class GameManager : MonoBehaviour
         
         UpdateScoreUI(false);
         gameOverPanel.SetActive(false);
-        if (UseStartPanel) StartPanel.SetActive(true);
+        StartPanel.SetActive(true);
         Time.timeScale = 0f;
         movesSinceLastAd = 0;
     }
@@ -102,25 +125,21 @@ public class GameManager : MonoBehaviour
 
     private void UpdateContinueButtonState()
     {
-        if (continueGameButton != null)
-        {
-            continueGameButton.interactable = hasActiveGame && !isGameOver;
-        }
+        continueGameButton.interactable = hasActiveGame && !isGameOver;
     }
 
     public void ContinueGame()
     {
         LoadProgress();
-        if (hasActiveGame)
-        {
-            gameOverPanel.SetActive(false);
-            ResumeGame();
-            Time.timeScale = 1f;
-        }
+        gameOverPanel.SetActive(false);
+        ResumeGame();
+        Time.timeScale = 1f;
     }
 
     public void AddScore(int points)
     {
+        if (!ShowAdsInsideTheHameplay) return;
+
         int oldScore = currentScore;
         currentScore += points;
         
@@ -199,12 +218,11 @@ public class GameManager : MonoBehaviour
         movesSinceLastAd = 0;
 
         ResumeGame();
-        SaveProgress();
-        ResumeGame();
     }
 
     public void PauseGame()
     {
+        SaveProgress();
         Time.timeScale = 0f;
         StartPanel.SetActive(true);
         StartPanel.transform.localScale = Vector3.zero;
@@ -212,17 +230,22 @@ public class GameManager : MonoBehaviour
     }
 
     public void ResumeGame()
-    {
+    {    
         StartPanel.transform.DOScale(Vector3.zero, 0.5f).SetEase(Ease.InBack).SetUpdate(true)
             .OnComplete(() => {
                 StartPanel.SetActive(false);
                 Time.timeScale = 1f;
             });
+
+        if(ShowAdsForButton)
+        {
+            ShowInterstitialAd();
+        }
     }
 
     private void ShowInterstitialAd()
     {
-        platformSDKManager.FullscreenShow();
+        currentPltform.FullscreenShow();
     }
 
     public void GiveReward()
@@ -265,43 +288,52 @@ public class GameManager : MonoBehaviour
         };
 
         string json = JsonUtility.ToJson(saveData);
-        platformSDKManager.SaveProgress(SaveDataKey, json);
+        Debug.Log("Сохранение данных: " + json);
+        currentPltform.SaveProgress(SaveDataKey, json);
+
     }
 
     public void Load() => YandexGame.LoadLocal();
 
     public void LoadProgress()
     {
-        platformSDKManager.LoadProgress(SaveDataKey, OnProgressLoaded);
+        currentPltform.LoadProgress(SaveDataKey, OnProgressLoaded);
     }
 
-    private void OnProgressLoaded(string savedData)
+    private void OnProgressLoaded(string data)
     {
-        if (!string.IsNullOrEmpty(savedData))
+        Debug.Log("Запуск метода OnProgressLoaded!!! Данные:" + data);
+        GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(data);
+        Debug.Log("процесс извлечения:" + saveData);
+
+        if(saveData == null)
         {
-            GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(savedData);
-            bestScore = saveData.bestScore;
-            currentScore = saveData.currentScore;
-            hasActiveGame = saveData.hasActiveGame;
-            
-            if (hasActiveGame && saveData.boardState != null && saveData.boardState.Length > 0)
-            {
-                // Преобразуем одномерный массив обратно в двумерный
-                int size = saveData.boardSize;
-                int[,] boardState = new int[size, size];
-                for (int x = 0; x < size; x++)
-                {
-                    for (int y = 0; y < size; y++)
-                    {
-                        boardState[x, y] = saveData.boardState[x * size + y];
-                    }
-                }
-                gameBoard.LoadBoardState(boardState);
-            }
-            
-            UpdateScoreUI(false);
-            UpdateContinueButtonState();
+            Debug.Log("Данные не загружены");
+            return;
         }
+
+        bestScore = saveData.bestScore;
+        currentScore = saveData.currentScore;
+        hasActiveGame = saveData.hasActiveGame;
+        
+        // Debug.Log((saveData.boardState != null ) + " !!! " + saveData.boardState.Length);
+        if (saveData.boardState != null && saveData.boardState.Length > 0)
+        {
+            // Преобразуем одномерный массив обратно в двумерный
+            int size = saveData.boardSize;
+            int[,] boardState = new int[size, size];
+            for (int x = 0; x < size; x++)
+            {
+                for (int y = 0; y < size; y++)
+                {
+                    boardState[x, y] = saveData.boardState[x * size + y];
+                }
+            }
+            gameBoard.LoadBoardState(boardState);
+        }
+        
+        UpdateScoreUI(false);
+        UpdateContinueButtonState();
     }
 
     private void OnApplicationPause(bool pauseStatus)

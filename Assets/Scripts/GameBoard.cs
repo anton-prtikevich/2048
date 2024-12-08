@@ -66,7 +66,7 @@ public class GameBoard : MonoBehaviour
                 }
             }
         }
-        // Debug.Log("Игровая доска загружена");
+        Debug.Log("Игровая доска загружена");
     }
 
     private void InitializeBoard()

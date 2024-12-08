@@ -10,7 +10,7 @@ public class YandexPlatformSDK : MonoBehaviour, IPlatformSDK
         Debug.Log("Yandex SDK initialized");
     }
 
-    public void ShowInterstitial()
+    public void FullscreenShow()
     {
         YandexGame.FullscreenShow();
     }
@@ -29,6 +29,7 @@ public class YandexPlatformSDK : MonoBehaviour, IPlatformSDK
 
     public void LoadProgress(string key, Action<string> onComplete)
     {
+        YandexGame.LoadLocal();
         string data = YandexGame.savesData.savegame;
         onComplete?.Invoke(data);
     }

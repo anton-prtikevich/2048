@@ -1,9 +1,20 @@
 using UnityEngine;
 using System.Runtime.InteropServices;
 using System;
+using TMPro;
+
+// Цепочка вызовов выглядит так: Unity C# (VKPlatformSDK.cs) -> VKPlugins.jslib -> vksdk.js -> vkbridge.js -> VK API
+
+[Serializable]
+public class StorageData
+{
+    public string key;
+    public string value;
+}
 
 public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
 {
+    [SerializeField] private TextMeshProUGUI debugtext;
     [SerializeField] private bool useLocalStorage = false;
     private Action<string> currentLoadCallback;
 
@@ -23,8 +34,6 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
     [DllImport("__Internal")]
     private static extern void setStorageType(bool useLocal);
 
-    [DllImport("__Internal")]
-    private static extern void testLoadComplete();
     #endif
 
     public void Initialize()
@@ -37,7 +46,7 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
         #endif
     }
 
-    public void ShowInterstitial()
+    public void FullscreenShow()
     {
         #if UNITY_WEBGL && !UNITY_EDITOR
         try
@@ -95,6 +104,7 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
 
     public void LoadProgress(string key, Action<string> onComplete)
     {
+        currentLoadCallback = onComplete;
         if (string.IsNullOrEmpty(key))
         {
             Debug.LogError("Cannot load with empty key");
@@ -105,7 +115,6 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
         #if UNITY_WEBGL && !UNITY_EDITOR
         try
         {
-            currentLoadCallback = onComplete;
             vkLoadData(key);
         }
         catch (System.Exception e)
@@ -115,15 +124,48 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
         }
         #else
         string value = PlayerPrefs.GetString($"VK_{key}", "");
-        Debug.Log($"VK loading progress: {key} = {value} (editor/non-WebGL)");
-        onComplete?.Invoke(value);
+        // Debug.Log($"VK loading progress: {key} = {value} (editor/non-WebGL)");
+        currentLoadCallback?.Invoke(value);
         #endif
     }
 
     public void JSOnLoadComplete(string jsonData)
     {
-        Debug.Log($"VK load completed: {jsonData}");
+        try 
+        {
+            // Парсим структуру данных VK
+            StorageData storageData = JsonUtility.FromJson<StorageData>(jsonData);
+            
+            // Извлекаем actual данные из поля value
+            string actualData = storageData?.value ?? jsonData;
+            
+            Debug.Log($"VK load completed: {actualData}");
+            debugtext.text += actualData;
+            
+            // Возвращаем только actual данные в GameManager
+            currentLoadCallback?.Invoke(actualData);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error parsing VK storage data: {e.Message}");
+            currentLoadCallback?.Invoke(jsonData); // В случае ошибки возвращаем исходные данные
+        }
+        finally 
+        {
+            currentLoadCallback = null;
+        }
+    }
+
+    public void JSOnLoadError(string jsonData)
+    {
+        Debug.Log($"VK Load Error !!! Не получилось загрузить данные");
+        debugtext.text += jsonData;
         currentLoadCallback?.Invoke(jsonData);
         currentLoadCallback = null;
+    }
+
+    public void OnSaveComplete(string jsonData)
+    {
+        Debug.Log($"Сохранения произошло");
     }
 }
