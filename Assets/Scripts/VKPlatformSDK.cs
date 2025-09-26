@@ -15,6 +15,8 @@ public class StorageData
 public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
 {
     [SerializeField] private TextMeshProUGUI debugtext;
+    // Если true — используется локальное хранилище браузера (localStorage), если false — облачное хранилище VK (через VK Bridge)
+    // Можно менять в инспекторе Unity для выбора типа хранения данных
     [SerializeField] private bool useLocalStorage = false;
     private Action<string> currentLoadCallback;
 
@@ -39,9 +41,11 @@ public class VKPlatformSDK : MonoBehaviour, IPlatformSDK
     public void Initialize()
     {
         Debug.Log("Initializing VK SDK");
+        // Выводим в консоль, какой тип хранилища выбран
         Debug.Log($"Using {(useLocalStorage ? "local" : "cloud")} storage");
 
         #if UNITY_WEBGL && !UNITY_EDITOR
+        // Передаём выбранный тип хранилища в JS-обёртку VK SDK
         setStorageType(useLocalStorage);
         #endif
     }
